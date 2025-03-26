@@ -39,11 +39,45 @@ class ClientUDP
     {
 
         //TODO: [Create endpoints and socket]
+        IPAddress ClientIP = IPAddress.Parse(setting.ClientIPAddress);
+        int ClientPort = setting.ClientPortNumber;
+        IPAddress ServerIP = IPAddress.Parse(setting.ServerIPAddress);
+        int ServerPort = setting.ServerPortNumber;
+
+
+        IPEndPoint ipEndPoint = new IPEndPoint(ServerIP, ServerPort);
+        IPEndPoint sender = new IPEndPoint(ClientIP, ClientPort);
+
+        Socket client;
+
+
+
+        try
+        {
+            client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+
 
 
         //TODO: [Create and send HELLO]
+        Message msg = new Message();
+        msg.MsgId = 1;
+        msg.MsgType = MessageType.Hello;
+        string message = "Hello from client";
+        msg.Content = message;
+
+        client.SendTo(JsonSerializer.Ser);
+        
+        
+
+
 
         //TODO: [Receive and print Welcome from server]
+
 
         // TODO: [Create and send DNSLookup Message]
 
