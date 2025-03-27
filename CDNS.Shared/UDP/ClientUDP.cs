@@ -3,6 +3,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text;
 using CDNS.Shared.Models;
+using Microsoft.Extensions.Logging;
 
 namespace CDNS.Shared.UDP;
 
@@ -17,15 +18,15 @@ public class ClientUDP : BaseUDP
 
     public void Start()
     {
-        IPEndPoint ipEndPoint = new IPEndPoint(ServerIP, ServerPort);
+        IPEndPoint remoteEndPoint = new IPEndPoint(ServerIP, ServerPort);
         Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
         // Create and send Hello
-        SendHello(client, ipEndPoint);
+        SendHello(client, remoteEndPoint);
 
         // Receive and print Welcome from server
-        ReceiveWelcome(client);
+        ReceiveMessage(client);
 
         // List of DNS lookups to perform
         List<string> dnsLookups = new List<string> { "example.com", "nonexistentdomain.xyz" };
@@ -35,104 +36,64 @@ public class ClientUDP : BaseUDP
             var dnsRequestId = GetNextMessageId();
 
             // Create and send DNSLookup Message
-            SendDNSLookup(client, ipEndPoint, domain, dnsRequestId);
+            SendDNSLookup(client, remoteEndPoint, domain, dnsRequestId);
 
             // Receive and print DNSLookupReply from server
-            ReceiveDNSLookupReply(client);
+            ReceiveMessage(client);
             
             // Send Acknowledgment to Server
-            SendAcknowledgment(client, ipEndPoint, dnsRequestId);
+            SendAcknowledgment(client, remoteEndPoint, dnsRequestId);
         }
 
         // Send End message and receive End confirmation
-        SendEnd(client, ipEndPoint);
-        ReceiveEnd(client);
+        SendEnd(client, remoteEndPoint);
+        ReceiveMessage(client);
 
         Console.ReadLine();
     }
 
-    private void SendHello(Socket client, IPEndPoint ipEndPoint)
-    {
-        var helloMessage = new Message
-        {
-            MsgId = GetNextMessageId(),
-            MsgType = MessageType.Hello,
-            Content = "Hello from client"
-        };
-        SendMessage(helloMessage, ipEndPoint, client);
-    }
+    private void SendHello(Socket client, IPEndPoint remoteEndPoint) 
+        => SendMessage(MessageType.Hello, client, remoteEndPoint, GetNextMessageId(), "Hello from client");
 
-    private void ReceiveWelcome(Socket client)
-    {
-        var buffer = new byte[1024];
-        EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-        int receivedBytes = client.ReceiveFrom(buffer, ref remoteEndPoint);
-        var receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-        Console.WriteLine($"Received: {receivedMessage}");
-    }
+    private void SendDNSLookup(Socket client, IPEndPoint remoteEndPoint, string domain, int dnsRequestId) 
+        => SendMessage(MessageType.DNSLookup, client, remoteEndPoint, dnsRequestId, domain);
 
-    private void SendDNSLookup(Socket client, IPEndPoint ipEndPoint, string domain, int dnsRequestId)
+    private void SendAcknowledgment(Socket client, IPEndPoint remoteEndPoint, int msgId) 
+        => SendMessage(MessageType.Ack, client, remoteEndPoint, msgId, msgId.ToString());
+
+    private void SendEnd(Socket client, IPEndPoint remoteEndPoint) 
+        => SendMessage(MessageType.End, client, remoteEndPoint, GetNextMessageId(), "End of DNSLookup");
+
+    private void SendMessage(MessageType type, Socket client, IPEndPoint remoteEndPoint, int msgId = -1, string? content = null)
     {
-        var dnsLookupMessage = new Message
+        var message = new Message
         {
-            MsgId = dnsRequestId,
-            MsgType = MessageType.DNSLookup,
-            Content = domain
+            MsgId = msgId == -1 ? GetNextMessageId() : msgId,
+            MsgType = type,
+            Content = content
         };
 
-        Console.WriteLine($"MsgId {dnsRequestId}: Looking up: {domain}");
-        SendMessage(dnsLookupMessage, ipEndPoint, client);
-    }
+        Log(LogLevel.Information, message.Content!.ToString()!, message.MsgType, message.MsgId, remoteEndPoint: remoteEndPoint, direction: DirectionType.Out);
 
-    private void ReceiveDNSLookupReply(Socket client)
-    {
-        var buffer = new byte[1024];
-        EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-        int receivedBytes = client.ReceiveFrom(buffer, ref remoteEndPoint);
-        var receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-        Console.WriteLine($"Received DNSLookupReply: {receivedMessage}");
-    }
-
-    private void SendAcknowledgment(Socket client, IPEndPoint ipEndPoint, int dnsRequestId)
-    {
-        var ackMessage = new Message
-        {
-            MsgId = dnsRequestId,
-            MsgType = MessageType.Ack,
-            Content = dnsRequestId
-        };
-
-        Console.WriteLine($"Sending Ack msgId: {dnsRequestId}");
-        SendMessage(ackMessage, ipEndPoint, client);
-    }
-
-    private void SendEnd(Socket client, IPEndPoint ipEndPoint)
-    {
-        var endMessage = new Message
-        {
-            MsgId = GetNextMessageId(),
-            MsgType = MessageType.End,
-            Content = "End of DNSLookup"
-        };
-
-        Console.WriteLine("Sending End message");
-        SendMessage(endMessage, ipEndPoint, client);
-    }
-
-    private void ReceiveEnd(Socket client)
-    {
-        var buffer = new byte[1024];
-        EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-        int receivedBytes = client.ReceiveFrom(buffer, ref remoteEndPoint);
-        var receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-        Console.WriteLine($"Received: {receivedMessage}");
-    }
-
-    private void SendMessage(Message message, EndPoint remoteEndPoint, Socket socket)
-    {
         var messageJson = JsonSerializer.Serialize(message);
         byte[] buffer = Encoding.UTF8.GetBytes(messageJson);
-        socket.SendTo(buffer, remoteEndPoint);
+        client.SendTo(buffer, remoteEndPoint);
+    }
+
+    private Message? ReceiveMessage(Socket client)
+    {
+        var buffer = new byte[1024];
+        EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+        int receivedBytes = client.ReceiveFrom(buffer, ref remoteEndPoint);
+        var receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+
+        var message = JsonSerializer.Deserialize<Message>(receivedMessage);
+        if (message == null)
+            Log(LogLevel.Warning, $"Unable to deserialize message: {receivedMessage}", remoteEndPoint: remoteEndPoint, direction: DirectionType.In);
+        else 
+            Log(LogLevel.Information, message.Content!.ToString()!, message.MsgType, message.MsgId, remoteEndPoint, direction: DirectionType.In);
+
+        return message;
     }
 
     private int GetNextMessageId()

@@ -17,6 +17,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\DirectionType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)JsonConverters\IPAddressConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UDP\ClientUDP.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Config\Settings.cs" />
