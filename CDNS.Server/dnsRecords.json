@@ -154,5 +154,44 @@
     "Value": "mailhost.lastapp.org",
     "Priority": 20,
     "TTL": 3600
+  },
+  {
+    "Type": "A",
+    "Name": "api.finaltest.net",
+    "Value": "192.168.5.1",
+    "TTL": 3600
+  },
+  {
+    "Type": "A",
+    "Name": "cdn.finalcdn.org",
+    "Value": "192.168.5.2",
+    "TTL": 3600
+  },
+  {
+    "Type": "A",
+    "Name": "www.testcdn.net",
+    "Value": "192.168.5.3",
+    "TTL": 3600
+  },
+  {
+    "Type": "MX",
+    "Name": "mail.finaltest.net",
+    "Value": "mailhost.finaltest.net",
+    "Priority": 10,
+    "TTL": 3600
+  },
+  {
+    "Type": "MX",
+    "Name": "mail.testcdn.org",
+    "Value": "mailhost.testcdn.org",
+    "Priority": 15,
+    "TTL": 3600
+  },
+  {
+    "Type": "MX",
+    "Name": "mail.testfinal.net",
+    "Value": "mailhost.testfinal.net",
+    "Priority": 5,
+    "TTL": 3600
   }
 ]

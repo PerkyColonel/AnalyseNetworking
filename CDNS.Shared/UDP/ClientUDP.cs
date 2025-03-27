@@ -26,13 +26,62 @@ public class ClientUDP : BaseUDP
 
         // Receive and print Welcome from server
         ReceiveWelcome(client);
-        string lookupsPath = "Config/Lookups.json";
-        List<string> dnsLookups = dnsLookups = new List<string> { "example.com", "nonexistentdomain.xyz" };
-        if (File.Exists(lookupsPath))
+
+        // menu
+        bool stop = false;
+        while (!stop)
         {
-            string lookupData = File.ReadAllText(lookupsPath);
+            Console.WriteLine($"");
+            Console.WriteLine($"Kies een van de onderstaande opties: ");
+            Console.WriteLine($"[1] preset 1");
+            Console.WriteLine($"[2] preset 2");
+            Console.WriteLine($"[3] preset 3");
+            Console.WriteLine($"[4] Zelf een domein zoeken.");
+            Console.WriteLine($"[5] stoppen");
+            char option = Console.ReadKey().KeyChar;
+            Console.WriteLine("");
+
+            switch (option)
+            {
+                case '1':
+                    UsePreset(client, ipEndPoint, @"Configurations/Lookups1.json");
+                    break;
+                case '2':
+                    UsePreset(client, ipEndPoint, @"Configurations/Lookups2.json");
+                    break;
+                case '3':
+                    UsePreset(client, ipEndPoint, @"Configurations/Lookups3.json");
+                    break;
+                case '4':
+                    SearchUrl(client, ipEndPoint);
+                    break;
+                case '5':
+                    stop = true;
+                    break;
+                default:
+                    Console.WriteLine("Not an option");
+                    break;
+            }
+
+        }
+
+        // Send End message and receive End confirmation
+        SendEnd(client, ipEndPoint);
+        ReceiveEnd(client);
+
+        Console.ReadLine();
+    }
+
+    private void UsePreset(Socket client, IPEndPoint ipEndPoint, string path)
+    {
+        List<string> dnsLookups = new List<string>();
+        if (File.Exists(path))
+        {
+            string lookupData = File.ReadAllText(path);
             dnsLookups = JsonSerializer.Deserialize<List<string>>(lookupData);
         }
+
+        
 
         // List of DNS lookups to perform
 
@@ -45,33 +94,10 @@ public class ClientUDP : BaseUDP
 
             // Receive and print DNSLookupReply from server
             ReceiveDNSLookupReply(client);
-            
+
             // Send Acknowledgment to Server
             SendAcknowledgment(client, ipEndPoint, dnsRequestId);
         }
-        bool stop = false;
-        while (!stop)
-        {
-            Console.WriteLine("Zoek een URL of typ: 'q' om te stoppen");
-            string url = Console.ReadLine();
-            if (url is null || url == "q")
-            {
-                stop = true;
-                break;
-            }
-            int dnsRequestId = GetNextMessageId();
-            SendDNSLookup(client, ipEndPoint, url, dnsRequestId);
-            ReceiveDNSLookupReply(client);
-            SendAcknowledgment(client, ipEndPoint, dnsRequestId);
-
-
-        }
-
-        // Send End message and receive End confirmation
-        SendEnd(client, ipEndPoint);
-        ReceiveEnd(client);
-
-        Console.ReadLine();
     }
 
     private void SendHello(Socket client, IPEndPoint ipEndPoint)
@@ -164,5 +190,19 @@ public class ClientUDP : BaseUDP
             _lastMessageId = 0;
 
         return ++_lastMessageId;
+    }
+
+    private void SearchUrl(Socket client, IPEndPoint ipEndPoint)
+    {
+        Console.WriteLine("Zoek een URL of typ: 'q' om te stoppen");
+        string url = Console.ReadLine();
+        if (url is null || url == "q")
+        {
+            return;
+        }
+        int dnsRequestId = GetNextMessageId();
+        SendDNSLookup(client, ipEndPoint, url, dnsRequestId);
+        ReceiveDNSLookupReply(client);
+        SendAcknowledgment(client, ipEndPoint, dnsRequestId);
     }
 }
