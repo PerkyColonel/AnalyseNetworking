@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDNS.Client", "CDNS.Client\
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CDNS.Shared", "CDNS.Shared\CDNS.Shared.shproj", "{650F0EA7-DB25-4315-9564-FADB78BD36A1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServer", "TestServer\TestServer.csproj", "{1E910446-3567-4074-A65F-E3AC87BA52F6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{E838D788-E9CB-4122-95EA-217832CF68E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E838D788-E9CB-4122-95EA-217832CF68E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E838D788-E9CB-4122-95EA-217832CF68E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E910446-3567-4074-A65F-E3AC87BA52F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E910446-3567-4074-A65F-E3AC87BA52F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E910446-3567-4074-A65F-E3AC87BA52F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E910446-3567-4074-A65F-E3AC87BA52F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
