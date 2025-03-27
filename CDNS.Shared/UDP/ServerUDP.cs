@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
@@ -22,11 +23,8 @@ public class ServerUDP : BaseUDP
     // A dictionary to keep track of active connections and their last activity time
     public Dictionary<EndPoint, DateTime> ActiveConnections { get; private set; } = new Dictionary<EndPoint, DateTime>();
 
-    // An arbitrary message ID to keep track of messages
-    private int _lastMessageId = 0;
-
     // A dictionary to keep track of messages that are awaiting acknowledgment
-    public Dictionary<int, (Message Message, DateTime LastAttempt, int DeliveryAttempt, EndPoint Reciever)> AwaitingAckMessages { get; private set; } = new Dictionary<int, (Message Message, DateTime LastAttempt, int DeliveryAttempt, EndPoint Reciever)>();
+    public Dictionary<(int MsgId, EndPoint Reciever), (Message Message, DateTime LastAttempt, int DeliveryAttempt, EndPoint Reciever)> AwaitingAckMessages { get; private set; } = new Dictionary<(int MsgId, EndPoint Reciever), (Message Message, DateTime LastAttempt, int DeliveryAttempt, EndPoint Reciever)>();
 
     public void Start()
     {
@@ -80,7 +78,7 @@ public class ServerUDP : BaseUDP
                         if (delivery.DeliveryAttempt >= 3)
                         {
                             Console.WriteLine($"Resending message ID {delivery.Message.MsgId} to {delivery.Reciever} failed after 3 attempts. Removing from awaiting acknowledgment.");
-                            AwaitingAckMessages.Remove(delivery.Message.MsgId);
+                            AwaitingAckMessages.Remove((delivery.Message.MsgId, delivery.Reciever));
                             continue;
                         }
 
@@ -95,7 +93,7 @@ public class ServerUDP : BaseUDP
             foreach (var inactiveConnection in inactiveConnections)
             {
                 Console.WriteLine($"Connection {inactiveConnection.Key} has been inactive for more than 60 seconds. Removing from active connections.");
-                SendEnd(inactiveConnection.Key, socket);
+                SendEnd(0, inactiveConnection.Key, socket);
             }
         }
     }
@@ -109,7 +107,7 @@ public class ServerUDP : BaseUDP
         if (message is null)
         {
             Console.WriteLine("Received malformed message. Sending an error message back to the client.");
-            SendMessage("Malformed message received.", MessageType.Error, remoteEndPoint, socket);
+            SendMessage(0, "Malformed message received.", MessageType.Error, remoteEndPoint, socket);
             return;
         }
 
@@ -118,63 +116,63 @@ public class ServerUDP : BaseUDP
         {
             case MessageType.Hello:
                 Console.WriteLine($"Received Hello message from {remoteEndPoint}. Sending Welcome message back.");
-                HandleHello(remoteEndPoint, socket);
+                HandleHello(message.MsgId, remoteEndPoint, socket);
                 break;
             case MessageType.DNSLookup:
                 Console.WriteLine($"Received DNSLookup message from {remoteEndPoint}. Processing DNS lookup...");
-                ProcessDNSLookup(message, remoteEndPoint, socket);
+                ProcessDNSLookup(message.MsgId, message, remoteEndPoint, socket);
                 break;
             case MessageType.Ack:
                 Console.WriteLine($"Received Acknowledgment message from {remoteEndPoint}. Continuing...");
-                HandleAck(message, remoteEndPoint, socket);
+                HandleAck(message.MsgId, message, remoteEndPoint, socket);
                 break;
             case MessageType.End:
                 Console.WriteLine($"Received End message from {remoteEndPoint}. Closing the connection.");
-                HandleEnd(remoteEndPoint, socket);
+                HandleEnd(message.MsgId, remoteEndPoint, socket);
                 break;
             default:
                 Console.WriteLine($"Received unknown message type from {remoteEndPoint}. Sending an error message back to the client.");
-                SendMessage("Unknown message type received.", MessageType.Error, remoteEndPoint, socket);
+                SendError(message.MsgId, "Unknown message type received.", remoteEndPoint, socket);
                 break;
         }
     }
 
-    private void HandleHello(EndPoint remoteEndPoint, Socket socket)
+    private void HandleHello(int messageId, EndPoint remoteEndPoint, Socket socket)
     {
         // Track remoteEndPoint for policy enforcement
         ActiveConnections[remoteEndPoint] = DateTime.Now;
-        SendWelcome(remoteEndPoint, socket);
+        SendWelcome(messageId, remoteEndPoint, socket);
     }
 
-    private void HandleEnd(EndPoint remoteEndPoint, Socket socket)
+    private void HandleEnd(int messageId, EndPoint remoteEndPoint, Socket socket)
     {
         // Remove remoteEndPoint for policy enforcement
         ActiveConnections.Remove(remoteEndPoint);
-        SendEnd(remoteEndPoint, socket);
+        SendEnd(messageId, remoteEndPoint, socket);
     }
 
-    private void HandleAck(Message message, EndPoint remoteEndPoint, Socket socket)
+    private void HandleAck(int messageId, Message message, EndPoint remoteEndPoint, Socket socket)
     {
         // If the message ID is not found in the awaiting acknowledgment dictionary, the data is malformed
-        if (!AwaitingAckMessages.ContainsKey(message.MsgId))
+        if (!AwaitingAckMessages.ContainsKey((message.MsgId, remoteEndPoint)))
         {
-            Console.WriteLine("Received malformed Acknowledgment message. Message ID not found in awaiting acknowledgment dictionary.");
-            SendError("Message ID not found in awaiting acknowledgment dictionary.", remoteEndPoint, socket);
+            Console.WriteLine($"Received malformed Acknowledgment message. Message ID {messageId} not found in awaiting acknowledgment dictionary.");
+            SendError(messageId, $"Message ID {messageId} not found in awaiting acknowledgment dictionary.", remoteEndPoint, socket);
             return;
         }
 
         // Remove the message from the awaiting acknowledgment dictionary
-        AwaitingAckMessages.Remove(message.MsgId);
+        AwaitingAckMessages.Remove((message.MsgId, remoteEndPoint));
         Console.WriteLine($"Acknowledgment received for message ID {message.MsgId} from {remoteEndPoint}. Continuing...");
     }
 
-    private void ProcessDNSLookup(Message message, EndPoint remoteEndPoint, Socket socket)
+    private void ProcessDNSLookup(int messageId, Message message, EndPoint remoteEndPoint, Socket socket)
     {
         // If the remoteEndPoint is not found in the active connections dictionary, the client has not sent a Hello message
         if (!ActiveConnections.ContainsKey(remoteEndPoint))
         {
             Console.WriteLine($"DNSLookup message received from {remoteEndPoint} before a Hello message. Sending an error message back to the client.");
-            SendError("DNSLookup message received before a Hello message.", remoteEndPoint, socket);
+            SendError(messageId, "DNSLookup message received before a Hello message.", remoteEndPoint, socket);
             return;
         }
 
@@ -185,18 +183,18 @@ public class ServerUDP : BaseUDP
         if (message.Content == null)
         {
             Console.WriteLine("Received malformed DNSLookup message. Sending an error message back to the client. Message content is null.");
-            SendError("Domain not found", remoteEndPoint, socket);
+            SendError(messageId, "Domain not found", remoteEndPoint, socket, true);
             return;
         }
 
-        // Deserialize the content of the message into a string (the domain name to look up)
-        var domainName = JsonSerializer.Deserialize<string>(message.Content.ToString()!);
+        // Convert the content of the message to a string
+        var domainName = message.Content.ToString();
 
         // If the domain name is null or empty, the data is malformed
         if (string.IsNullOrWhiteSpace(domainName))
         {
             Console.WriteLine("Received malformed DNSLookup message. Sending an error message back to the client. Domain name is null or whitespace.");
-            SendError("Domain not found", remoteEndPoint, socket);
+            SendError(messageId, "Domain not found", remoteEndPoint, socket, true);
             return;
         }
 
@@ -207,16 +205,16 @@ public class ServerUDP : BaseUDP
         if (dnsRecord != null)
         {
             Console.WriteLine($"DNS record found for {domainName}. Sending DNSLookupReply message back to {remoteEndPoint}.");
-            SendDNSLookupReply(dnsRecord, remoteEndPoint, socket);
+            SendDNSLookupReply(messageId, dnsRecord, remoteEndPoint, socket);
         }
         else
         {
             Console.WriteLine($"DNS record not found for {domainName}. Sending an error message back to {remoteEndPoint}.");
-            SendError("DNS record not found.", remoteEndPoint, socket);
+            SendError(messageId, "DNS record not found.", remoteEndPoint, socket, true);
         }
     }
 
-    private void SendMessage(Message message, EndPoint remoteEndPoint, Socket socket, int deliveryAttempt = 0)
+    private void SendMessage(Message message, EndPoint remoteEndPoint, Socket socket, int deliveryAttempt = 0, bool ackExpected = false)
     {
         // Serialize the message into a JSON string
         var messageJson = JsonSerializer.Serialize(message);
@@ -235,48 +233,34 @@ public class ServerUDP : BaseUDP
         }
 
         // If the message type is a DNSLookupReply, add it to the awaiting acknowledgment dictionary
-        if (message.MsgType == MessageType.DNSLookupReply)
-            AwaitingAckMessages[message.MsgId] = (message, DateTime.Now, ++deliveryAttempt, remoteEndPoint);
+        if (message.MsgType == MessageType.DNSLookupReply || ackExpected)
+            AwaitingAckMessages[(message.MsgId, remoteEndPoint)] = (message, DateTime.Now, ++deliveryAttempt, remoteEndPoint);
     }
 
-    private void SendMessage(string content, MessageType messageType, EndPoint remoteEndPoint, Socket socket)
+    private void SendMessage(int messageId, string content, MessageType messageType, EndPoint remoteEndPoint, Socket socket, bool ackExpected = false)
     {
         // Create a new message with the provided content and type
         var message = new Message
         {
-            MsgId = GetNextMessageId(),
+            MsgId = messageId,
             MsgType = messageType,
             Content = content
         };
 
-        SendMessage(message, remoteEndPoint, socket);
+        SendMessage(message, remoteEndPoint, socket, ackExpected: ackExpected);
     }
 
-    private void SendEnd(EndPoint remoteEndPoint, Socket socket) 
-        => SendMessage("End of DNSLookup", MessageType.End, remoteEndPoint, socket);
+    private void SendEnd(int messageId, EndPoint remoteEndPoint, Socket socket) 
+        => SendMessage(messageId, "End of DNSLookup", MessageType.End, remoteEndPoint, socket);
 
-    private void SendError(string message, EndPoint remoteEndPoint, Socket socket)
-        => SendMessage(message, MessageType.Error, remoteEndPoint, socket);
+    private void SendError(int messageId, string message, EndPoint remoteEndPoint, Socket socket, bool ackExpected = false)
+        => SendMessage(messageId, message, MessageType.Error, remoteEndPoint, socket, ackExpected);
 
-    private void SendDNSLookupReply(DNSRecord dnsRecord, EndPoint remoteEndPoint, Socket socket)
-        => SendMessage(JsonSerializer.Serialize(dnsRecord), MessageType.DNSLookupReply, remoteEndPoint, socket);
+    private void SendDNSLookupReply(int messageId, DNSRecord dnsRecord, EndPoint remoteEndPoint, Socket socket)
+        => SendMessage(messageId, JsonSerializer.Serialize(dnsRecord), MessageType.DNSLookupReply, remoteEndPoint, socket);
 
-    private void SendWelcome(EndPoint remoteEndPoint, Socket socket)
-        => SendMessage("Welcome from server", MessageType.Welcome, remoteEndPoint, socket);
-
-    /// <summary>
-    /// Get the next safe message ID that is not currently in use or awaiting acknowledgment.
-    /// </summary>
-    private int GetNextMessageId()
-    {
-        if (_lastMessageId == int.MaxValue)
-            _lastMessageId = 0;
-
-        while (AwaitingAckMessages.ContainsKey(++_lastMessageId))
-            _lastMessageId++;
-
-        return ++_lastMessageId;
-    }
+    private void SendWelcome(int messageId, EndPoint remoteEndPoint, Socket socket)
+        => SendError(messageId, "Welcome from server", remoteEndPoint, socket);
 
     private void LoadDnsRecords()
     {
