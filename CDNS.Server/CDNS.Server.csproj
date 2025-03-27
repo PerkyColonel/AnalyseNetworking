@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>CS8602,CS8604</NoWarn>
+  </PropertyGroup>
+
+  <Import Project="..\CDNS.Shared\CDNS.Shared.projitems" Label="Shared" />
+
+  <ItemGroup>
+    <None Remove="DNSrecords.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="dnsRecords.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>650f0ea7-db25-4315-9564-fadb78bd36a1</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>CDNS.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Configurations\clientSettingsDefault.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Configurations\serverSettingsDefault.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)UDP\ClientUDP.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Config\Settings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\RoleType.cs" />
+    <Compile Include="..\CDNS.Shared\Models\DnsRecord.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\MessageType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Message.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UDP\BaseUDP.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UDP\ServerUDP.cs" />
+  </ItemGroup>
+</Project>
