@@ -45,16 +45,16 @@ public class ClientUDP : BaseUDP
             switch (option)
             {
                 case '1':
-                    UsePreset(client, ipEndPoint, @"Configurations/Lookups1.json");
+                    UsePreset(client, remoteEndPoint, @"Configurations/Lookups1.json");
                     break;
                 case '2':
-                    UsePreset(client, ipEndPoint, @"Configurations/Lookups2.json");
+                    UsePreset(client, remoteEndPoint, @"Configurations/Lookups2.json");
                     break;
                 case '3':
-                    UsePreset(client, ipEndPoint, @"Configurations/Lookups3.json");
+                    UsePreset(client, remoteEndPoint, @"Configurations/Lookups3.json");
                     break;
                 case '4':
-                    SearchUrl(client, ipEndPoint);
+                    SearchUrl(client, remoteEndPoint);
                     break;
                 case '5':
                     stop = true;
@@ -67,10 +67,8 @@ public class ClientUDP : BaseUDP
         }
 
         // Send End message and receive End confirmation
-        SendEnd(client, ipEndPoint);
-        ReceiveEnd(client);
-
-        Console.ReadLine();
+        SendEnd(client, remoteEndPoint);
+        ReceiveMessage(client);
     }
 
     private void UsePreset(Socket client, IPEndPoint ipEndPoint, string path)
@@ -91,20 +89,14 @@ public class ClientUDP : BaseUDP
             var dnsRequestId = GetNextMessageId();
 
             // Create and send DNSLookup Message
-            SendDNSLookup(client, remoteEndPoint, domain, dnsRequestId);
+            SendDNSLookup(client, ipEndPoint, domain, dnsRequestId);
 
             // Receive and print DNSLookupReply from server
             ReceiveMessage(client);
             
             // Send Acknowledgment to Server
-            SendAcknowledgment(client, remoteEndPoint, dnsRequestId);
+            SendAcknowledgment(client, ipEndPoint, dnsRequestId);
         }
-
-        // Send End message and receive End confirmation
-        SendEnd(client, remoteEndPoint);
-        ReceiveMessage(client);
-
-        Console.ReadLine();
     }
 
     private void SendHello(Socket client, IPEndPoint remoteEndPoint) 
@@ -169,7 +161,7 @@ public class ClientUDP : BaseUDP
         }
         int dnsRequestId = GetNextMessageId();
         SendDNSLookup(client, ipEndPoint, url, dnsRequestId);
-        ReceiveDNSLookupReply(client);
+        ReceiveMessage(client);
         SendAcknowledgment(client, ipEndPoint, dnsRequestId);
     }
 }
