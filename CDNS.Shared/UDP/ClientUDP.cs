@@ -26,9 +26,15 @@ public class ClientUDP : BaseUDP
 
         // Receive and print Welcome from server
         ReceiveWelcome(client);
+        string lookupsPath = "Config/Lookups.json";
+        List<string> dnsLookups = dnsLookups = new List<string> { "example.com", "nonexistentdomain.xyz" };
+        if (File.Exists(lookupsPath))
+        {
+            string lookupData = File.ReadAllText(lookupsPath);
+            dnsLookups = JsonSerializer.Deserialize<List<string>>(lookupData);
+        }
 
         // List of DNS lookups to perform
-        List<string> dnsLookups = new List<string> { "example.com", "nonexistentdomain.xyz" };
 
         foreach (var domain in dnsLookups)
         {
@@ -42,6 +48,23 @@ public class ClientUDP : BaseUDP
             
             // Send Acknowledgment to Server
             SendAcknowledgment(client, ipEndPoint, dnsRequestId);
+        }
+        bool stop = false;
+        while (!stop)
+        {
+            Console.WriteLine("Zoek een URL of typ: 'q' om te stoppen");
+            string url = Console.ReadLine();
+            if (url is null || url == "q")
+            {
+                stop = true;
+                break;
+            }
+            int dnsRequestId = GetNextMessageId();
+            SendDNSLookup(client, ipEndPoint, url, dnsRequestId);
+            ReceiveDNSLookupReply(client);
+            SendAcknowledgment(client, ipEndPoint, dnsRequestId);
+
+
         }
 
         // Send End message and receive End confirmation
