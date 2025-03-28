@@ -1,10 +1,8 @@
-﻿using System.Net;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Text.Json;
-using CDNS.Shared.Config;
+﻿using CDNS.Shared.Config;
+using CDNS.Shared.Helpers;
 using Microsoft.Extensions.Logging;
-using Spectre.Console;
+using System.Net;
+using System.Text.Json;
 
 namespace CDNS.Shared.UDP;
 
@@ -49,44 +47,6 @@ public abstract class BaseUDP
         ServerPort = settings.Port;
     }
 
-    protected void Log(LogLevel logLevel, string message, MessageType? type = null, int msgId = -1, EndPoint? remoteEndPoint = null, DirectionType direction = DirectionType.Out)
-    {
-        StringBuilder logBuilder = new StringBuilder();
-
-        if (logLevel <= LogLevel.Debug) logBuilder.Append("[dim]");
-
-        logBuilder.Append($"[{GetRoleColor(Role)}]{Role}[/] | ");
-        logBuilder.Append($"[grey]{DateTime.Now.ToShortTimeString()}[/] | ");
-        if (remoteEndPoint is not null)
-            logBuilder.Append($"[darkorange3_1]{remoteEndPoint}[/] | ");
-        if (msgId != -1)
-            logBuilder.Append($"[grey]{msgId}[/] | ");
-        if (type is not null)
-            logBuilder.Append($"[{GetTypeColor(type)}]{type}-{direction}[/] | ");
-        logBuilder.Append(message);
-
-        if (logLevel <= LogLevel.Debug) logBuilder.Append("[/]");
-
-        AnsiConsole.Console.MarkupLine(logBuilder.ToString());
-    }
-
-    private string GetRoleColor(RoleType role) => role switch
-    {
-        RoleType.Server => "blue",
-        RoleType.Client => "green",
-        _ => "yellow",
-    };
-
-    private string GetTypeColor(MessageType? type) => type switch
-    {
-        MessageType.Hello => "green",
-        MessageType.Welcome => "blue",
-        MessageType.DNSLookup => "yellow",
-        MessageType.DNSLookupReply => "yellow",
-        MessageType.DNSRecord => "yellow",
-        MessageType.Ack => "green",
-        MessageType.End => "red",
-        MessageType.Error => "red",
-        _ => "grey",
-    };
+    public void Log(LogLevel logLevel, string message, MessageType? type = null, int msgId = -1, EndPoint? remoteEndPoint = null, DirectionType direction = DirectionType.Out)
+        => LogHelper.Log(logLevel, message, type, msgId, remoteEndPoint, direction, Role);
 }

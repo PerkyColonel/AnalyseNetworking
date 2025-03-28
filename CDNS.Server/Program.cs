@@ -1,4 +1,4 @@
-﻿using CDNS.Shared.UDP;
+﻿using CDNS.Server.UDP;
 
 namespace CDNS.Server;
 

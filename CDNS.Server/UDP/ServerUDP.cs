@@ -1,12 +1,13 @@
-﻿using System;
+﻿using CDNS.Shared;
+using CDNS.Shared.Models;
+using CDNS.Shared.UDP;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
-using CDNS.Shared.Models;
-using Microsoft.Extensions.Logging;
 
-namespace CDNS.Shared.UDP;
+namespace CDNS.Server.UDP;
 
 public class ServerUDP : BaseUDP
 {
@@ -17,7 +18,7 @@ public class ServerUDP : BaseUDP
     public ServerUDP(string? configPath = null, string? dnsRecordsPath = null) : base(RoleType.Server, configPath)
         => DnsRecordsPath = dnsRecordsPath;
 
-    private string _dnsRecordsPath = "dnsRecords.json"; // default path for dns records
+    private string _dnsRecordsPath = "Configurations/dnsRecords.json"; // default path for dns records
     public string? DnsRecordsPath { get { return _dnsRecordsPath; } private set { _dnsRecordsPath = value ?? _dnsRecordsPath; } }
     public List<DNSRecord> DnsRecords { get; private set; } = new List<DNSRecord>();
 
@@ -241,7 +242,7 @@ public class ServerUDP : BaseUDP
         SendMessage(message, remoteEndPoint, socket, ackExpected: ackExpected);
     }
 
-    private void SendEnd(int messageId, EndPoint remoteEndPoint, Socket socket) 
+    private void SendEnd(int messageId, EndPoint remoteEndPoint, Socket socket)
         => SendMessage(messageId, "End of DNSLookup", MessageType.End, remoteEndPoint, socket);
 
     private void SendError(int messageId, string message, EndPoint remoteEndPoint, Socket socket, bool ackExpected = false)
@@ -250,7 +251,7 @@ public class ServerUDP : BaseUDP
     private void SendDNSLookupReply(int messageId, DNSRecord dnsRecord, EndPoint remoteEndPoint, Socket socket)
         => SendMessage(messageId, JsonSerializer.Serialize(dnsRecord), MessageType.DNSLookupReply, remoteEndPoint, socket);
 
-    private void SendWelcome(int messageId, EndPoint remoteEndPoint, Socket socket) 
+    private void SendWelcome(int messageId, EndPoint remoteEndPoint, Socket socket)
         => SendMessage(messageId, "Welcome from server", MessageType.Welcome, remoteEndPoint, socket);
 
     private void LoadDnsRecords()
@@ -261,7 +262,7 @@ public class ServerUDP : BaseUDP
         if (string.IsNullOrWhiteSpace(DnsRecordsPath))
         {
             Log(LogLevel.Information, "No DNS records path provided. Using default path: dnsRecords.json.");
-            DnsRecordsPath = "dnsRecords.json";
+            DnsRecordsPath = "Configurations/dnsRecords.json";
         }
 
         // If the file does not exist, create a new file and write an empty JSON array to it.

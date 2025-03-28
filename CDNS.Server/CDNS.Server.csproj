@@ -15,7 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="dnsRecords.json">
+    <Content Include="Configurations\serverSettingsDefault.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configurations\dnsRecords.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

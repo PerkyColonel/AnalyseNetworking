@@ -1,11 +1,13 @@
-﻿using System.Net.Sockets;
-using System.Net;
-using System.Text.Json;
-using System.Text;
+﻿using CDNS.Shared;
 using CDNS.Shared.Models;
+using CDNS.Shared.UDP;
 using Microsoft.Extensions.Logging;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.Json;
 
-namespace CDNS.Shared.UDP;
+namespace CDNS.Client.UDP;
 
 public class ClientUDP : BaseUDP
 {
@@ -16,7 +18,7 @@ public class ClientUDP : BaseUDP
     // An arbitrary message ID to keep track of messages
     private int _lastMessageId = new Random().Next(1, 100000);
 
-    public void Start()
+    public void Start(List<string> domainLookups)
     {
         IPEndPoint remoteEndPoint = new IPEndPoint(ServerIP, ServerPort);
         Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -28,42 +30,18 @@ public class ClientUDP : BaseUDP
         // Receive and print Welcome from server
         ReceiveMessage(client);
 
-        // menu
-        bool stop = false;
-        while (!stop)
+        foreach (var domain in domainLookups)
         {
-            Console.WriteLine($"");
-            Console.WriteLine($"Kies een van de onderstaande opties: ");
-            Console.WriteLine($"[1] preset 1");
-            Console.WriteLine($"[2] preset 2");
-            Console.WriteLine($"[3] preset 3");
-            Console.WriteLine($"[4] Zelf een domein zoeken.");
-            Console.WriteLine($"[5] stoppen");
-            char option = Console.ReadKey().KeyChar;
-            Console.WriteLine("");
+            var dnsRequestId = GetNextMessageId();
 
-            switch (option)
-            {
-                case '1':
-                    UsePreset(client, remoteEndPoint, @"Configurations/Lookups1.json");
-                    break;
-                case '2':
-                    UsePreset(client, remoteEndPoint, @"Configurations/Lookups2.json");
-                    break;
-                case '3':
-                    UsePreset(client, remoteEndPoint, @"Configurations/Lookups3.json");
-                    break;
-                case '4':
-                    SearchUrl(client, remoteEndPoint);
-                    break;
-                case '5':
-                    stop = true;
-                    break;
-                default:
-                    Console.WriteLine("Not an option");
-                    break;
-            }
+            // Create and send DNSLookup Message
+            SendDNSLookup(client, remoteEndPoint, domain, dnsRequestId);
 
+            // Receive and print DNSLookupReply from server
+            ReceiveMessage(client);
+
+            // Send Acknowledgment to Server
+            SendAcknowledgment(client, remoteEndPoint, dnsRequestId);
         }
 
         // Send End message and receive End confirmation
@@ -71,44 +49,16 @@ public class ClientUDP : BaseUDP
         ReceiveMessage(client);
     }
 
-    private void UsePreset(Socket client, IPEndPoint ipEndPoint, string path)
-    {
-        List<string> dnsLookups = new List<string>();
-        if (File.Exists(path))
-        {
-            string lookupData = File.ReadAllText(path);
-            dnsLookups = JsonSerializer.Deserialize<List<string>>(lookupData);
-        }
-
-        
-
-        // List of DNS lookups to perform
-
-        foreach (var domain in dnsLookups)
-        {
-            var dnsRequestId = GetNextMessageId();
-
-            // Create and send DNSLookup Message
-            SendDNSLookup(client, ipEndPoint, domain, dnsRequestId);
-
-            // Receive and print DNSLookupReply from server
-            ReceiveMessage(client);
-            
-            // Send Acknowledgment to Server
-            SendAcknowledgment(client, ipEndPoint, dnsRequestId);
-        }
-    }
-
-    private void SendHello(Socket client, IPEndPoint remoteEndPoint) 
+    private void SendHello(Socket client, IPEndPoint remoteEndPoint)
         => SendMessage(MessageType.Hello, client, remoteEndPoint, GetNextMessageId(), "Hello from client");
 
-    private void SendDNSLookup(Socket client, IPEndPoint remoteEndPoint, string domain, int dnsRequestId) 
+    private void SendDNSLookup(Socket client, IPEndPoint remoteEndPoint, string domain, int dnsRequestId)
         => SendMessage(MessageType.DNSLookup, client, remoteEndPoint, dnsRequestId, domain);
 
-    private void SendAcknowledgment(Socket client, IPEndPoint remoteEndPoint, int msgId) 
+    private void SendAcknowledgment(Socket client, IPEndPoint remoteEndPoint, int msgId)
         => SendMessage(MessageType.Ack, client, remoteEndPoint, msgId, msgId.ToString());
 
-    private void SendEnd(Socket client, IPEndPoint remoteEndPoint) 
+    private void SendEnd(Socket client, IPEndPoint remoteEndPoint)
         => SendMessage(MessageType.End, client, remoteEndPoint, GetNextMessageId(), "End of DNSLookup");
 
     private void SendMessage(MessageType type, Socket client, IPEndPoint remoteEndPoint, int msgId = -1, string? content = null)
@@ -137,7 +87,7 @@ public class ClientUDP : BaseUDP
         var message = JsonSerializer.Deserialize<Message>(receivedMessage);
         if (message == null)
             Log(LogLevel.Warning, $"Unable to deserialize message: {receivedMessage}", remoteEndPoint: remoteEndPoint, direction: DirectionType.In);
-        else 
+        else
             Log(LogLevel.Information, message.Content!.ToString()!, message.MsgType, message.MsgId, remoteEndPoint, direction: DirectionType.In);
 
         return message;
@@ -149,19 +99,5 @@ public class ClientUDP : BaseUDP
             _lastMessageId = 0;
 
         return ++_lastMessageId;
-    }
-
-    private void SearchUrl(Socket client, IPEndPoint ipEndPoint)
-    {
-        Console.WriteLine("Zoek een URL of typ: 'q' om te stoppen");
-        string url = Console.ReadLine();
-        if (url is null || url == "q")
-        {
-            return;
-        }
-        int dnsRequestId = GetNextMessageId();
-        SendDNSLookup(client, ipEndPoint, url, dnsRequestId);
-        ReceiveMessage(client);
-        SendAcknowledgment(client, ipEndPoint, dnsRequestId);
     }
 }

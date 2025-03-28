@@ -9,32 +9,14 @@
     <Import_RootNamespace>CDNS.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)Configurations\clientSettingsDefault.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Configurations\Lookups3.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Configurations\Lookups2.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Configurations\serverSettingsDefault.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Configurations\Lookups1.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Enums\DirectionType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\LogHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)JsonConverters\IPAddressConverter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)UDP\ClientUDP.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Config\Settings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\RoleType.cs" />
     <Compile Include="..\CDNS.Shared\Models\DnsRecord.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\MessageType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Message.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UDP\BaseUDP.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)UDP\ServerUDP.cs" />
   </ItemGroup>
 </Project>
