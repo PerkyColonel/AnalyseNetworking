@@ -10,16 +10,23 @@
   <Import Project="..\CDNS.Shared\CDNS.Shared.projitems" Label="Shared" />
 
   <ItemGroup>
+    <None Remove="Configurations\clientSettingsLocal.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Configurations\clientSettingsLocal.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Configurations\clientSettingsDefault.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Configurations\Lookups1.json">
+    <Content Include="Lookups\Lookups1.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Configurations\Lookups2.json">
+    <Content Include="Lookups\Lookups2.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Configurations\Lookups3.json">
+    <Content Include="Lookups\Lookups3.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

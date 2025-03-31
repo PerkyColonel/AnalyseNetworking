@@ -81,10 +81,21 @@ public class ClientUDP : BaseUDP
     {
         var buffer = new byte[1024];
         EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-        int receivedBytes = client.ReceiveFrom(buffer, ref remoteEndPoint);
-        var receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+        Message? message = null;
+        string receivedMessage = string.Empty;
 
-        var message = JsonSerializer.Deserialize<Message>(receivedMessage);
+        try
+        {
+            int receivedBytes = client.ReceiveFrom(buffer, ref remoteEndPoint);
+            receivedMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+            message = JsonSerializer.Deserialize<Message>(receivedMessage);
+        }
+        catch (SocketException e)
+        {
+            Log(LogLevel.Error, e.Message);
+            return null;
+        }
+
         if (message == null)
             Log(LogLevel.Warning, $"Unable to deserialize message: {receivedMessage}", remoteEndPoint: remoteEndPoint, direction: DirectionType.In);
         else
