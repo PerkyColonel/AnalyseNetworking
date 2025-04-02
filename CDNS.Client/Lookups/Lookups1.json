@@ -1,1 +1,54 @@
-﻿[ "www.example.com", "mail.testdomain.com", "cdn.sample.net", "", "api.customapp.net", "randomcharacters#$%*", "www.customproject.com", "192.168.1.1", "Foutename.nl", "mail.example.com", "test123.org", "website zonder spatie.nl", "cdn.sitename.org", "www.thisdoesntexist.net", "example" ]
+﻿[
+  {
+    "Type": "MX",
+    "Name": "www.example.com"
+  },
+  {
+    "Type": "A",
+    "Name": "mail.testdomain.com"
+  },
+  {
+    "Type": "A",
+    "Name": "cdn.sample.net"
+  },
+  {
+    "Type": "A",
+    "Name": ""
+  },
+  {
+    "Type": "A",
+    "Name": "api.customapp.net"
+  },
+  {
+    "Type": "A",
+    "Name": "www.customproject.com"
+  },
+  {
+    "Type": "A",
+    "Name": "192.168.1.1"
+  },
+  {
+    "Type": "A",
+    "Name": "Foutename.nl"
+  },
+  {
+    "Type": "A",
+    "Name": "mail.example.com"
+  },
+  {
+    "Type": "A",
+    "Name": "test123.org"
+  },
+  {
+    "Type": "A",
+    "Name": "cdn.sitename.org"
+  },
+  {
+    "Type": "A",
+    "Name": "www.thisdoesntexist.net"
+  },
+  {
+    "Type": "A",
+    "Name": "example"
+  }
+]

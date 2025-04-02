@@ -20,7 +20,7 @@ public class ServerUDP : BaseUDP
 
     private string _dnsRecordsPath = "Configurations/dnsRecords.json"; // default path for dns records
     public string? DnsRecordsPath { get { return _dnsRecordsPath; } private set { _dnsRecordsPath = value ?? _dnsRecordsPath; } }
-    public List<DNSRecord> DnsRecords { get; private set; } = new List<DNSRecord>();
+    public List<DnsRecord> DnsRecords { get; private set; } = new List<DnsRecord>();
 
     // A dictionary to keep track of active connections and their last activity time
     public Dictionary<EndPoint, DateTime> ActiveConnections { get; private set; } = new Dictionary<EndPoint, DateTime>();
@@ -185,17 +185,25 @@ public class ServerUDP : BaseUDP
         }
 
         // Convert the content of the message to a string
-        var domainName = message.Content.ToString();
+        var lookupRequest = message.Content.ToString();
+        var dnsLookup = JsonSerializer.Deserialize<DnsLookup>(lookupRequest);
+
+        // If the lookup request is null, the data is malformed
+        if (dnsLookup == null)
+        {
+            SendError(messageId, "Domain not found.", remoteEndPoint, socket, true);
+            return;
+        }
 
         // If the domain name is null or empty, the data is malformed
-        if (string.IsNullOrWhiteSpace(domainName))
+        if (string.IsNullOrWhiteSpace(lookupRequest))
         {
             SendError(messageId, "Domain not found", remoteEndPoint, socket, true);
             return;
         }
 
         // Find the DNS record for the domain name
-        var dnsRecord = DnsRecords.FirstOrDefault(r => r.Name == domainName);
+        var dnsRecord = DnsRecords.FirstOrDefault(r => r.Name == dnsLookup.Name && r.Type == dnsLookup.Type.ToString());
 
         // If the record is found, send a DNSLookupReply message with the record
         if (dnsRecord != null)
@@ -248,7 +256,7 @@ public class ServerUDP : BaseUDP
     private void SendError(int messageId, string message, EndPoint remoteEndPoint, Socket socket, bool ackExpected = false)
         => SendMessage(messageId, message, MessageType.Error, remoteEndPoint, socket, ackExpected);
 
-    private void SendDNSLookupReply(int messageId, DNSRecord dnsRecord, EndPoint remoteEndPoint, Socket socket)
+    private void SendDNSLookupReply(int messageId, DnsRecord dnsRecord, EndPoint remoteEndPoint, Socket socket)
         => SendMessage(messageId, JsonSerializer.Serialize(dnsRecord), MessageType.DNSLookupReply, remoteEndPoint, socket);
 
     private void SendWelcome(int messageId, EndPoint remoteEndPoint, Socket socket)
@@ -269,19 +277,19 @@ public class ServerUDP : BaseUDP
         if (!File.Exists(DnsRecordsPath))
         {
             Log(LogLevel.Information, $"DNS records file not found at {DnsRecordsPath}. Creating a new file for storage.");
-            File.WriteAllText(DnsRecordsPath, JsonSerializer.Serialize(new List<DNSRecord>()));
+            File.WriteAllText(DnsRecordsPath, JsonSerializer.Serialize(new List<DnsRecord>()));
         }
 
         // Read the DNS records from the JSON file
         var dnsFileData = File.ReadAllText(DnsRecordsPath);
-        var dnsRecords = JsonSerializer.Deserialize<List<DNSRecord>>(dnsFileData);
+        var dnsRecords = JsonSerializer.Deserialize<List<DnsRecord>>(dnsFileData);
 
         // If the file is not empty but the records are null, the data is malformed.
         if (dnsRecords is null && !string.IsNullOrWhiteSpace(dnsFileData))
             throw new InvalidOperationException($"Failed to read DNS records from {DnsRecordsPath}, and file was not empty! Data must be malformed!");
 
         // If the records are null, set the records to an empty list.
-        DnsRecords = dnsRecords ?? new List<DNSRecord>();
+        DnsRecords = dnsRecords ?? new List<DnsRecord>();
 
         // Log the number of records loaded from the file.
         Log(LogLevel.Information, $"Loaded {DnsRecords.Count} DNS records from {DnsRecordsPath}.");

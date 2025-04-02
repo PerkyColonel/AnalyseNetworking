@@ -1,6 +1,8 @@
 ﻿using CDNS.Client.Models;
 using CDNS.Client.UDP;
+using CDNS.Shared;
 using CDNS.Shared.Helpers;
+using CDNS.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using System.Net;
@@ -31,7 +33,17 @@ class Program
         var useDefault = AnsiConsole.Prompt(new ConfirmationPrompt("Do you want to use the default settings?"));
         if (!useDefault)
         {
-            iPAddress = AnsiConsole.Prompt(new TextPrompt<IPAddress>("Enter the IP address of the DNS Server:"));
+            var ipString = AnsiConsole.Prompt(new TextPrompt<string>("Enter the IP address of the DNS Server:").Validate((ip) =>
+            {
+                if (IPAddress.TryParse(ip, out var ipAddress))
+                {
+                    iPAddress = ipAddress;
+                    return ValidationResult.Success();
+                }
+                return ValidationResult.Error("Invalid IP address.");
+            }));
+
+            iPAddress = IPAddress.Parse(ipString); 
             port = AnsiConsole.Prompt(new TextPrompt<int>("Enter the port of the DNS Server:"));
         }
     }
@@ -59,28 +71,34 @@ class Program
 
     private static void SearchDomain()
     {
+        var recordTypes = Enum.GetValues(typeof(DnsRecordType)).Cast<DnsRecordType>().ToList();
+
+        var recordType = AnsiConsole.Prompt(new SelectionPrompt<DnsRecordType>()
+            .Title("What type of record do you want to look up?")
+            .PageSize(10)
+            .AddChoices(recordTypes));
         var domainName = AnsiConsole.Prompt(new TextPrompt<string>("Which domain do you want to look up?"));
 
-        CreateClientUDP([domainName]);
+        CreateClientUDP([new DnsLookup() { Name = domainName, Type = recordType.ToString() }]);
     }
 
     private static void LoadLookups(string lookupFilePath)
     {
-        List<string>? dnsLookups = new List<string>();
+        List<DnsLookup>? dnsLookups = [];
         if (File.Exists(lookupFilePath))
         {
             string lookupData = File.ReadAllText(lookupFilePath);
 
-            dnsLookups = JsonSerializer.Deserialize<List<string>>(lookupData);
+            dnsLookups = JsonSerializer.Deserialize<List<DnsLookup>>(lookupData);
             if (dnsLookups == null)
-                LogHelper.Log(LogLevel.Error, $"No DNS Lookup requests found in {lookupFilePath}.", role: Shared.RoleType.Client);
+                LogHelper.Log(LogLevel.Error, $"No DNS Lookup requests found in {lookupFilePath}.", role: RoleType.Client);
         }
 
         if (dnsLookups != null && dnsLookups.Count > 0)
             CreateClientUDP(dnsLookups);
     }
 
-    private static void CreateClientUDP(List<string> dnsLookups)
+    private static void CreateClientUDP(List<DnsLookup> dnsLookups)
     {
         if (iPAddress != null && port != null)
             new ClientUDP(iPAddress, port.Value).Start(dnsLookups);

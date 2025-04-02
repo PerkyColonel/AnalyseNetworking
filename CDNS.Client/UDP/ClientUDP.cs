@@ -18,7 +18,7 @@ public class ClientUDP : BaseUDP
     // An arbitrary message ID to keep track of messages
     private int _lastMessageId = new Random().Next(1, 100000);
 
-    public void Start(List<string> domainLookups)
+    public void Start(List<DnsLookup> domainLookups)
     {
         IPEndPoint remoteEndPoint = new IPEndPoint(ServerIP, ServerPort);
         Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -30,12 +30,12 @@ public class ClientUDP : BaseUDP
         // Receive and print Welcome from server
         ReceiveMessage(client);
 
-        foreach (var domain in domainLookups)
+        foreach (var lookupRequest in domainLookups)
         {
             var dnsRequestId = GetNextMessageId();
 
             // Create and send DNSLookup Message
-            SendDNSLookup(client, remoteEndPoint, domain, dnsRequestId);
+            SendDNSLookup(client, remoteEndPoint, lookupRequest, dnsRequestId);
 
             // Receive and print DNSLookupReply from server
             ReceiveMessage(client);
@@ -52,8 +52,8 @@ public class ClientUDP : BaseUDP
     private void SendHello(Socket client, IPEndPoint remoteEndPoint)
         => SendMessage(MessageType.Hello, client, remoteEndPoint, GetNextMessageId(), "Hello from client");
 
-    private void SendDNSLookup(Socket client, IPEndPoint remoteEndPoint, string domain, int dnsRequestId)
-        => SendMessage(MessageType.DNSLookup, client, remoteEndPoint, dnsRequestId, domain);
+    private void SendDNSLookup(Socket client, IPEndPoint remoteEndPoint, DnsLookup lookupRequest, int dnsRequestId)
+        => SendMessage(MessageType.DNSLookup, client, remoteEndPoint, dnsRequestId, JsonSerializer.Serialize(lookupRequest));
 
     private void SendAcknowledgment(Socket client, IPEndPoint remoteEndPoint, int msgId)
         => SendMessage(MessageType.Ack, client, remoteEndPoint, msgId, msgId.ToString());

@@ -1,1 +1,62 @@
-﻿[ "mail.customproject.com", "192.168.3.1", "", "cdn.valid.net", "exampledomain.com", "!!!###", "www.website.space", "mail.finalexample.com", "test.me.uk", "invalid input", "api.lastproject.net", "cdn.name.net", "missingfield", "name.withoutTLD", "mail.lastproject.net" ]
+﻿[
+  {
+    "Type": "A",
+    "Name": "mail.customproject.com"
+  },
+  {
+    "Type": "A",
+    "Name": "192.168.3.1"
+  },
+  {
+    "Type": "A",
+    "Name": ""
+  },
+  {
+    "Type": "A",
+    "Name": "cdn.valid.net"
+  },
+  {
+    "Type": "A",
+    "Name": "exampledomain.com"
+  },
+  {
+    "Type": "A",
+    "Name": "!!!###"
+  },
+  {
+    "Type": "A",
+    "Name": "www.website.space"
+  },
+  {
+    "Type": "A",
+    "Name": "mail.finalexample.com"
+  },
+  {
+    "Type": "A",
+    "Name": "test.me.uk"
+  },
+  {
+    "Type": "A",
+    "Name": "invalid input"
+  },
+  {
+    "Type": "A",
+    "Name": "api.lastproject.net"
+  },
+  {
+    "Type": "A",
+    "Name": "cdn.name.net"
+  },
+  {
+    "Type": "A",
+    "Name": "missingfield"
+  },
+  {
+    "Type": "A",
+    "Name": "name.withoutTLD"
+  },
+  {
+    "Type": "A",
+    "Name": "mail.lastproject.net"
+  }
+]

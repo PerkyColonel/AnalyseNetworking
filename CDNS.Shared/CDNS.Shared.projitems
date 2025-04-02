@@ -10,10 +10,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Enums\DirectionType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\DnsRecordType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\LogHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)JsonConverters\IPAddressConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Config\Settings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\RoleType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\DnsLookup.cs" />
     <Compile Include="..\CDNS.Shared\Models\DnsRecord.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\MessageType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Message.cs" />

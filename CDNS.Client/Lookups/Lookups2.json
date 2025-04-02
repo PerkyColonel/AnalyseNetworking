@@ -1,1 +1,62 @@
-﻿[ "www.randomapp.net", "cdn.randomsite.org", "", "api.testapp.com", "@badinput", "ipv6.example.com", "mail.randomapp.net", "inval!d", "test-website.com", "123.456", "mail.sample.net", "test.org", "www.notfound.org", "cdn.validsite.com", "" ]
+﻿[
+  {
+    "Type": "A",
+    "Name": "www.randomapp.net"
+  },
+  {
+    "Type": "A",
+    "Name": "cdn.randomsite.org"
+  },
+  {
+    "Type": "A",
+    "Name": ""
+  },
+  {
+    "Type": "A",
+    "Name": "api.testapp.com"
+  },
+  {
+    "Type": "A",
+    "Name": "@badinput"
+  },
+  {
+    "Type": "A",
+    "Name": "ipv6.example.com"
+  },
+  {
+    "Type": "A",
+    "Name": "mail.randomapp.net"
+  },
+  {
+    "Type": "A",
+    "Name": "inval!d"
+  },
+  {
+    "Type": "A",
+    "Name": "test-website.com"
+  },
+  {
+    "Type": "A",
+    "Name": "123.456"
+  },
+  {
+    "Type": "A",
+    "Name": "mail.sample.net"
+  },
+  {
+    "Type": "A",
+    "Name": "test.org"
+  },
+  {
+    "Type": "A",
+    "Name": "www.notfound.org"
+  },
+  {
+    "Type": "A",
+    "Name": "cdn.validsite.com"
+  },
+  {
+    "Type": "A",
+    "Name": ""
+  }
+]

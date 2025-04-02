@@ -41,7 +41,6 @@ public static class LogHelper
         MessageType.Welcome => "blue",
         MessageType.DNSLookup => "yellow",
         MessageType.DNSLookupReply => "yellow",
-        MessageType.DNSRecord => "yellow",
         MessageType.Ack => "green",
         MessageType.End => "red",
         MessageType.Error => "red",
