@@ -41,7 +41,16 @@ public class ServerUDP : BaseUDP
         // Create a socket and endpoints and bind it to the server IP address and port number
         IPEndPoint ipEndPoint = new IPEndPoint(ServerIP, ServerPort);
         Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        socket.Bind(ipEndPoint);
+
+        // Bind the socket to the local endpoint, on failure log the error
+        try
+        {
+            socket.Bind(ipEndPoint);
+        } catch (SocketException ex) {
+            Log(LogLevel.Error, $"Failed to bind socket: {ex.Message}");
+            Environment.Exit(1);
+        }
+
         Log(LogLevel.Information, $"Server started and listening on {ServerIP}:{ServerPort}.");
 
         // Buffer for receiving data  
