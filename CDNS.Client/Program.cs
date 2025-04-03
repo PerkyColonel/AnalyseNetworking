@@ -43,7 +43,7 @@ class Program
                 return ValidationResult.Error("Invalid IP address.");
             }));
 
-            iPAddress = IPAddress.Parse(ipString); 
+            iPAddress = IPAddress.Parse(ipString);
             port = AnsiConsole.Prompt(new TextPrompt<int>("Enter the port of the DNS Server:"));
         }
     }
@@ -53,7 +53,8 @@ class Program
         List<MenuOption<Action>> choices = [];
 
         // Loop through Lookups folder and offer the user to choose a preset or search for a domain
-        Directory.GetFiles(@"Lookups", "*.json").ToList().ForEach(file => {
+        Directory.GetFiles(@"Lookups", "*.json").ToList().ForEach(file =>
+        {
             FileInfo fileInfo = new(file);
             choices.Add(new MenuOption<Action>(fileInfo.Name, () => { LoadLookups(file); }));
         });

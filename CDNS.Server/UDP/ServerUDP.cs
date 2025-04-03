@@ -20,13 +20,13 @@ public class ServerUDP : BaseUDP
 
     private string _dnsRecordsPath = "Configurations/dnsRecords.json"; // default path for dns records
     public string? DnsRecordsPath { get { return _dnsRecordsPath; } private set { _dnsRecordsPath = value ?? _dnsRecordsPath; } }
-    public List<DnsRecord> DnsRecords { get; private set; } = new List<DnsRecord>();
+    public List<DnsRecord> DnsRecords { get; private set; } = [];
 
     // A dictionary to keep track of active connections and their last activity time
-    public Dictionary<EndPoint, DateTime> ActiveConnections { get; private set; } = new Dictionary<EndPoint, DateTime>();
+    public Dictionary<EndPoint, DateTime> ActiveConnections { get; private set; } = [];
 
     // A dictionary to keep track of messages that are awaiting acknowledgment
-    public Dictionary<(int MsgId, EndPoint Reciever), (Message Message, DateTime LastAttempt, int DeliveryAttempt, EndPoint Reciever)> AwaitingAckMessages { get; private set; } = new Dictionary<(int MsgId, EndPoint Reciever), (Message Message, DateTime LastAttempt, int DeliveryAttempt, EndPoint Reciever)>();
+    public Dictionary<(int MsgId, EndPoint Reciever), (Message Message, DateTime LastAttempt, int DeliveryAttempt, EndPoint Reciever)> AwaitingAckMessages { get; private set; } = [];
 
     public void Start()
     {
@@ -46,7 +46,9 @@ public class ServerUDP : BaseUDP
         try
         {
             socket.Bind(ipEndPoint);
-        } catch (SocketException ex) {
+        }
+        catch (SocketException ex)
+        {
             Log(LogLevel.Error, $"Failed to bind socket: {ex.Message}");
             Environment.Exit(1);
         }
