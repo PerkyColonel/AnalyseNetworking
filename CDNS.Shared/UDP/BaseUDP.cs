@@ -16,8 +16,8 @@ public abstract class BaseUDP
     {
         Role = role;
 
-        if (serverIP is null || serverPort < 9000)
-            throw new InvalidOperationException("Server IP and port must be provided, server port must be 9000 or above.");
+        if (serverIP is null || serverPort < 5000)
+            throw new InvalidOperationException("Server IP and port must be provided, server port must be 5000 or above.");
 
         ServerIP = serverIP;
         ServerPort = serverPort;

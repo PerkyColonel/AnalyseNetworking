@@ -98,6 +98,10 @@ public class ClientUDP : BaseUDP
 
         if (message == null)
             Log(LogLevel.Warning, $"Unable to deserialize message: {receivedMessage}", remoteEndPoint: remoteEndPoint, direction: DirectionType.In);
+        else if (message.Content == null)
+            Log(LogLevel.Error, $"Received message is null: {receivedMessage}", remoteEndPoint: remoteEndPoint, direction: DirectionType.In);
+        else if (message.MsgType == MessageType.Error)
+            Log(LogLevel.Error, $"Error message received: {message.Content}", remoteEndPoint: remoteEndPoint, direction: DirectionType.In);
         else
             Log(LogLevel.Information, message.Content!.ToString()!, message.MsgType, message.MsgId, remoteEndPoint, direction: DirectionType.In);
 

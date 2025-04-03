@@ -20,7 +20,7 @@ public static class LogHelper
         if (msgId != -1)
             logBuilder.Append($"[grey]{msgId}[/] | ");
         if (type is not null)
-            logBuilder.Append($"[{GetTypeColor(type)}]{type}-{direction}[/] | ");
+            logBuilder.Append($"[{GetTypeColor(type)}]{direction}[/] - [{GetTypeColor(type)}]{type}[/] | ");
         logBuilder.Append(message);
 
         if (logLevel <= LogLevel.Debug) logBuilder.Append("[/]");

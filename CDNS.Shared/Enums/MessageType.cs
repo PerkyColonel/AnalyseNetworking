@@ -7,6 +7,7 @@ public enum MessageType
     Welcome,
     DNSLookup,
     DNSLookupReply,
+    DNSRecord,
     Ack,
     End,
     Error

@@ -32,8 +32,8 @@ public class ServerUDP : BaseUDP
     {
         // Before startup validate the server IP and port and make sure the sockets are available
         // If not throw an exception
-        if (ServerIP is null || ServerPort < 9000)
-            throw new InvalidOperationException("Server IP and port must be provided, server port must be 9000 or above.");
+        if (ServerIP is null || ServerPort < 5000)
+            throw new InvalidOperationException("Server IP and port must be provided, server port must be 5000 or above.");
 
         // Load the DNS records from the JSON file
         LoadDnsRecords();
